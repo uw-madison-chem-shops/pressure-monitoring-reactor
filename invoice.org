@@ -1,0 +1,54 @@
+#+TITLE: gas uptake reactor
+#+date: 2018-08-22
+#+customer: Chase Salazar
+#+group: Stahl
+
+| item                              | part                   |  rate | count | total | comment              |
+|-----------------------------------+------------------------+-------+-------+-------+----------------------|
+| M12 bulkhead                      | M12A-04PFFS-SF8001     |  7.00 |    12 | 84.00 |                      |
+| enclosure                         | EM-06                  | 50.00 |     1 | 50.00 |                      |
+| rasperry pi                       | 3B+                    | 45.00 |     1 | 45.00 |                      |
+| M12 cables                        | 7000-40021-0240100     |  8.00 |     3 | 24.00 |                      |
+| relay                             | AD-SSR625-DC-280A      | 20.00 |     1 | 20.00 |                      |
+| power cord                        | E267089                | 15.00 |     1 | 15.00 | NEMA 5-20 to C19     |
+| power supply, 12 V                | TXL 025-12S            | 40.00 |     1 | 40.00 |                      |
+| DC-DC converter                   | R-78W5.0-0.5           |  9.00 |     1 |  9.00 |                      |
+| HDMI panel mount                  | 4129                   |  6.00 |     1 |  6.00 | misorder             |
+| HDMI panel mount                  | AC-HDMI-RRB            | 10.00 |     1 | 10.00 |                      |
+| jones socket, panel mount         | S-302H-AB              |  3.00 |     2 |  6.00 |                      |
+| fuse holder                       | 03420004HXL            |  4.00 |     1 |  4.00 |                      |
+| power entry                       | 4798.9000              |  3.00 |     1 |  3.00 | C20                  |
+| switch                            | RB242D102R-137         |  3.00 |     1 |  3.00 |                      |
+| thermocouple panel jack           | RMJ-K-R                |  3.00 |     1 |  3.00 |                      |
+| neon indicator                    | 2110A3                 |  2.00 |     1 |  2.00 |                      |
+| heaters                           | TD50080FS              | 65.43 |     2 |     0 | supplied by customer |
+| thermocouple                      | KWNXX-G1-24R1          | 20.96 |     1 |     0 | supplied by customer |
+| 4-20 mA board                     |                        |       |       |       |                      |
+| thermocuple board                 |                        |       |       |       |                      |
+| HDMI cable                        | B06XQBQY2B             |  8.00 |     1 |  8.00 |                      |
+| ring terminal, #8, 14-16 AWG      |                        |  0.50 |     3 |  1.50 |                      |
+| blade piggyback, 0.25", 14-16 AWG | 0190120031             |  0.75 |     3 |       |  q                   |
+| terminal block, 5 contact         | 222-415                |  0.75 |     2 |  1.50 |                      |
+| blade terminal, 0.25", 14-16 AWG  | 0190190031             |  0.50 |    10 |  5.00 |                      |
+| ring terminal, #6, 14-16 AWG      |                        |  0.50 |     4 |  2.00 |                      |
+| standoff                          |                        |  0.50 |     7 |  3.50 |                      |
+| mini in-line plug, type K         | K1X-MALE-CON-FP-X-MPCX |  2.00 |     2 |  4.00 |                      |
+| jones plug, inline                | P-302H-CCT             |  6.00 |     4 | 24.00 |                      |
+| power supply, 5 V                 | RS-15-5                | 10.00 |     1 | 10.00 |                      |
+| thermal fuse, 200 deg F           | L5009124DELB0XE        | 15.00 |     3 | 45.00 | misorder             |
+| HDMI cable                        | B06XQBQY2B             |  8.00 |     1 |  8.00 |                      |
+| terminal block carrier            | 222-500                |  1.00 |     1 |  1.00 |                      |
+| ceramic terminal block            | EHD-108-121            | 12.00 |     4 |       |                      |
+| USB cable                         | SC-2AMK003F            |  3.00 |     1 |  3.00 |                      |
+| barrier strip                     | 1546670-3              |  3.00 |     1 |  3.00 |                      |
+| 0.437" jumper                     | 1776058-1              |  1.00 |     2 |  2.00 |                      |
+| barrel plug, 2.1 mm               | PP3-002A               |  1.00 |     1 |  1.00 |                      |
+| cable tie mount, adhesive         | 151-28349              |  0.25 |     8 |  2.00 |                      |
+| ring terminal, #6, 16-22 AWG      | 51863-1                |  0.50 |     6 |  3.00 |                      |
+| banana jack, green                | 108-0904-001           |  1.00 |     1 |  1.00 |                      |
+| banana plug, green                | 108-0304-001           |  2.00 |     1 |  2.00 |                      |
+parts total: $XXX.XX
+XX hours labor (Blaise Thompson): $XXX.XX
+total bill: $XXX.XX
+billed XXXX-XX-XX - internal ID XXXX
+(parts and labor from machine shop billed separately)
