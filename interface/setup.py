@@ -18,7 +18,7 @@ extra_files.append(os.path.join(here, "VERSION"))
 with open(os.path.join(here, "requirements.txt")) as f:
     required = f.read().splitlines()
 
-with open(os.path.join(here, "VERSION")) as version_file:
+with open(os.path.join(here, "gas_uptake", "VERSION")) as version_file:
     version = version_file.read().strip()
 
 setup(
