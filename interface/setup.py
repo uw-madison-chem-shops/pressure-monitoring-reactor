@@ -41,5 +41,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Topic :: Scientific/Engineering",
     ],
-    entry_points={"gui_scripts": ["gas_uptake=gas_uptake.__main__:main"]},
+    entry_points={"gui_scripts": ["gas-uptake=gas_uptake.__main__:main"]},
 )

@@ -29,6 +29,7 @@ temp/
 flycheck_*.el
 .projectile
 *.#*
+*#*#
 
 # images
 *.jpg
