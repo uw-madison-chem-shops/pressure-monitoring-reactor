@@ -69,8 +69,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.temp_table.append(qtypes.Number(name="set", units="deg_C"))
         self.temp_table.append(qtypes.Number(name="test"))
-        print(self.temp_table.keys())
-
+        self.temp_table.append(qtypes.Bool(name="test_bool"))
+        self.temp_table.append(qtypes.String(name="test_string"))
         self.status_scroll_area.add_widget(self.temp_table)
         self.set_temperature = qtypes.widgets.PushButton("SET TEMPERATURE")
         self.status_scroll_area.add_widget(self.set_temperature)
@@ -100,8 +100,10 @@ class MainWindow(QtWidgets.QMainWindow):
         hbox_widget.layout().setContentsMargins(0, 0, 0, 0)
         main_widget.layout().addWidget(hbox_widget)
         # graph
-        self.graph = qtypes.widgets.Graph()
-        hbox_widget.layout().addWidget(self.graph)
+        import pyqtgraph
+
+        self.graph = pyqtgraph.PlotWidget()  # qtypes.widgets.Graph()
+        hbox_widget.layout().addWidget(pyqtgraph.PlotWidget())
         # measure scroll area
         self.record_scroll_area = qtypes.widgets.ScrollArea()
         hbox_widget.layout().addWidget(self.record_scroll_area)
@@ -134,11 +136,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
     """Initialize application and main window."""
-    app = QtWidgets.QApplication(["yaq"])
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv)
     main_window = MainWindow(app)
     main_window.create_central_widget()
     main_window.showMaximized()
-    app.exec_()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
