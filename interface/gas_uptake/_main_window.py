@@ -26,19 +26,6 @@ class MainWindow(QtWidgets.QMainWindow):
         title += " | version %s" % self.__version__
         title += " | Python %i.%i" % (sys.version_info[0], sys.version_info[1])
         self.setWindowTitle(title)
-        # style sheet
-        # style_sheet = "QWidget{background-color: %s}" % colors["background"]
-        # self.setStyleSheet(style_sheet)
-        # disable 'x'
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.CustomizeWindowHint)
-        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
-        # platform specific
-        if os.name == "posix":
-            pass
-        elif os.name == "nt":
-            # must have unique app ID
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("gas-uptake")
-            # icon
 
     def center(self):
         """Center the window within the current screen."""
@@ -62,26 +49,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # temp
         self.temp_table = qtypes.widgets.InputTable()
         self.temp_table.append(None, "temperature")
-        self.current_temp = qtypes.Number(disabled=True)
-        self.set_temp = qtypes.Number(initial_value=200)
         self.temp_table.append(
             qtypes.Number(name="current", disabled=True, units="deg_C")
         )
         self.temp_table.append(qtypes.Number(name="set", units="deg_C"))
-        self.temp_table.append(qtypes.Number(name="test"))
-        self.temp_table.append(qtypes.Bool(name="test_bool"))
-        self.temp_table.append(qtypes.String(name="test_string"))
         self.status_scroll_area.add_widget(self.temp_table)
-        self.set_temperature = qtypes.widgets.PushButton("SET TEMPERATURE")
-        self.status_scroll_area.add_widget(self.set_temperature)
+        self.set_temperature_button = qtypes.widgets.PushButton("SET TEMPERATURE")
+        self.set_temperature_button.clicked.connect(self._on_set_temperature)
+        self.status_scroll_area.add_widget(self.set_temperature_button)
         # pressure
         self.pressure_table = qtypes.widgets.InputTable()
-        # self.pressure_table.append("PRESSURE", None)
-        self.current_pressures = []
+        self.pressure_table.append(None, label="pressure")
         for i in range(12):
-            n = qtypes.Number(disabled=True)
-            # self.current_pressures.append(n)
-            # self.pressure_table.append(f"SENSOR {i}", n)
+            self.pressure_table.append(qtypes.Number(disabled=True, name=f"sensor_{i}"))
         self.status_scroll_area.add_widget(self.pressure_table)
         #
         layout.addWidget(self.status_widget, 0)
@@ -100,38 +80,45 @@ class MainWindow(QtWidgets.QMainWindow):
         hbox_widget.layout().setContentsMargins(0, 0, 0, 0)
         main_widget.layout().addWidget(hbox_widget)
         # graph
-        import pyqtgraph
-
-        self.graph = pyqtgraph.PlotWidget()  # qtypes.widgets.Graph()
-        hbox_widget.layout().addWidget(pyqtgraph.PlotWidget())
+        self.graph = qtypes.widgets.Graph()
+        hbox_widget.layout().addWidget(self.graph)
         # measure scroll area
         self.record_scroll_area = qtypes.widgets.ScrollArea()
         hbox_widget.layout().addWidget(self.record_scroll_area)
         # record
         self.record_table = qtypes.widgets.InputTable()
-        # self.record_table.append("RECORD", None)
+        self.record_table.append(None, label="record")
         self.record_scroll_area.add_widget(self.record_table)
         self.record_button = qtypes.widgets.PushButton("BEGIN RECORDING")
+        self.record_button.clicked.connect(self._on_record)
         self.record_scroll_area.add_widget(self.record_button)
         # display
         self.display_table = qtypes.widgets.InputTable()
-        # self.display_table.append("DISPLAY", None)
-        self.plot_temperature = qtypes.Bool(True)
-        # self.display_table.append("SHOW TEMPERATURE", self.plot_temperature)
+        self.display_table.append(None, label="display")
+        self.display_table.append(qtypes.Bool(True, name="plot_temperatature"))
         self.plot_pressures = []
         for i in range(12):
-            b = qtypes.Bool(True)
-            # self.plot_pressures.append(b)
-            # self.display_table.append(f"SHOW PRESSURE {i}", b)
+            self.display_table.append(qtypes.Bool(True, name=f"plot_pressure_{i}"))
         self.record_scroll_area.add_widget(self.display_table)
         self.tare_pressure_button = qtypes.widgets.PushButton("TARE PRESSURES")
+        self.tare_pressure_button.clicked.connect(self.tare_pressures)
         self.record_scroll_area.add_widget(self.tare_pressure_button)
         # finish
         self.central_widget.setLayout(layout)
         self.setCentralWidget(self.central_widget)
 
+    def _on_record(self):
+        print("on record")
 
-# --- main ----------------------------------------------------------------------------------------
+    def _on_set_temperature(self):
+        new = self.temp_table["set"](units="deg_C")
+        self.temp_table["current"](new, units="deg_C")
+
+    def set_temperature(self, value, units):
+        print("set temperature", value, units)
+
+    def tare_pressures(self):
+        print("tare pressures")
 
 
 def main():
