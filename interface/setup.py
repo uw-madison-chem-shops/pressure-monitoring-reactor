@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     package_data={"": extra_files},
     data_files=data_files,
-    install_requires=["PySide2", "qtypes"],
+    install_requires=["qtypes"],
     version=version,
     description="gas_uptake",
     author="Blaise Thompson",
