@@ -11,7 +11,6 @@ import yaqc
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .__version__ import *
-from ._plot import plot_file
 
 
 __here__ = pathlib.Path(__file__).absolute().parent
@@ -181,8 +180,6 @@ class MainWindow(QtWidgets.QMainWindow):
             # button color
             self.record_button.set_background("#718c00")
             self.record_button.setText("BEGIN RECORDING")
-            # plot
-            plot_file(self.record_path)
         self.poll_timer.start(1000)
 
     def poll(self):
