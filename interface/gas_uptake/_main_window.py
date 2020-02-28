@@ -78,7 +78,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.temp_table = qtypes.widgets.InputTable()
         self.temp_table.append(None, "temperature")
         self.temp_table.append(qtypes.Number(name="current", disabled=True))
-        self.temp_table.append(qtypes.Number(name="set"))
+        n = qtypes.Number(name="set")
+        n.limits.write(-100, 170)
+        self.temp_table.append(n)
         self.status_scroll_area.add_widget(self.temp_table)
         # pressure
         self.pressure_table = qtypes.widgets.InputTable()
