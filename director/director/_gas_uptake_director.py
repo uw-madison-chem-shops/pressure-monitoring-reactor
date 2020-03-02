@@ -56,18 +56,19 @@ class GasUptakeDirector(Base):
         now = datetime.datetime.now()
         fname = "gas-uptake_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
         self.record_path = data_directory / fname
-        headers = {}
-        headers["timestamp"] = now.isoformat()
-        #headers["gas-uptake version"] = __version__
-        headers["temperature units"] = "C"
-        headers["pressure units"] = "PSI"
-        cs = []
-        cs.append("labtime")
-        cs.append("temperature")
-        for i in range(12):
-            cs.append(f"pressure_{i}")
-        headers["column"] = cs
-        #tidy_headers.write(self.record_path, headers)
+        tab = "\t"
+        newline = "\n"
+        with open(self.record_path, "a") as f:
+            f.write("timestamp" + tab + now.isoformat + newline)
+            #headers["gas-uptake version"] = __version__
+            #headers["temperature units"] = "C"
+            #headers["pressure units"] = "PSI"
+            cs = []
+            #cs.append("labtime")
+            #cs.append("temperature")
+            #for i in range(12):
+            #    cs.append(f"pressure_{i}")
+            #headers["column"] = cs
         # finish
         self.recording = True
         return self.record_path.as_posix()
@@ -107,7 +108,7 @@ class GasUptakeDirector(Base):
         self.temps.append(row[1])
         # write to file
         if self.recording:
-            write_row(path, row)
+            write_row(self.record_path, row)
         # PID
         p = 0.25 * (self.set_temp -  self.temps[-1])
         i = 0.2 * sum([self.set_temp - t for t in self.temps]) / len(self.temps)
