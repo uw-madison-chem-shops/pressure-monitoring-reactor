@@ -8,8 +8,9 @@ from typing import Dict, Any
 import datetime
 import collections
 import pathlib
-
 from yaqd_core import Base, logging
+
+from .__version__ import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,10 +20,11 @@ data_directory = pathlib.Path("Desktop/gas-uptake-data")
 
 
 def write_row(path, row):
-    with open(self.record_path, "ab") as f:
+    with open(path, "a") as f:
         for n in row:
-            f.write(b"%8.6f" % n)
-        f.write(b"\n")
+            f.write("%8.6f" % n)
+            f.write("\t")
+        f.write("\n")
 
 
 class GasUptakeDirector(Base):
@@ -59,16 +61,16 @@ class GasUptakeDirector(Base):
         tab = "\t"
         newline = "\n"
         with open(self.record_path, "a") as f:
-            f.write("timestamp" + tab + now.isoformat + newline)
-            #headers["gas-uptake version"] = __version__
-            #headers["temperature units"] = "C"
-            #headers["pressure units"] = "PSI"
-            cs = []
-            #cs.append("labtime")
-            #cs.append("temperature")
-            #for i in range(12):
-            #    cs.append(f"pressure_{i}")
-            #headers["column"] = cs
+            f.write("timestamp:" + tab + "'" + now.isoformat() + "'" + newline)
+            f.write("gas-uptake version:" + tab + "'" +  __version__ + "'" + newline)
+            f.write("temperature units:" + tab + "'C'" + newline)
+            f.write("pressure units:" + tab + "'PSI'" + newline)
+            f.write("column:" + tab + "[")
+            f.write("'labtime'")
+            f.write(tab + "'temperature'")
+            for i in range(12):
+                f.write(tab + f"'pressure_{i}'")
+            f.write("]" + newline)
         # finish
         self.recording = True
         return self.record_path.as_posix()
