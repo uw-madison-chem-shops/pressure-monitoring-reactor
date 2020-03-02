@@ -42,6 +42,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.recording = False
         self.client = yaqc.Client(39000)
         self.record_started = 0
+        #
+        self._begin_poll_loop()
 
     def _begin_poll_loop(self):
         self.poll_timer = QtCore.QTimer()
@@ -157,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data[:, -1] = row
         self.temp_table["current"].write(row[1])
         for i in range(12):
-            self.pressure_table[f"pressure_{i}"].write(row[i+2])
+            self.pressure_table[f"sensor_{i}"].write(row[i+2])
         self.update_plot()
 
     def set_temperature(self, value, units):
