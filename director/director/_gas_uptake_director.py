@@ -37,6 +37,7 @@ class GasUptakeDirector(Base):
         self.temps = collections.deque(maxlen=100)
         self.set_temp = 0
         self.row = []
+        time.sleep(30)
         # initialize clients
         self._heater_client = yaqc.Client(38455)
         self._heater_client.set_value(0)

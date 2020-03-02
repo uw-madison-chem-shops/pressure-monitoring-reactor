@@ -152,8 +152,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.poll_timer.start(1000)
 
     def poll(self):
+        row = self.client.get_last_reading()
         self.data = np.roll(self.data, shift=-1, axis=1)
-        self.data[:, -1] = self.client.get_last_reading()
+        self.data[:, -1] = row
+        self.temp_table["current"].write(row[1])
+        for i in range(12):
+            self.pressure_table[f"pressure_{i}"].write(row[i+2])
+        self.update_plot()
 
     def set_temperature(self, value, units):
         print("set temperature", value, units)
