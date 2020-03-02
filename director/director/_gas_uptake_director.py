@@ -4,8 +4,9 @@ import os
 import asyncio
 from typing import Dict, Any
 import datetime
-import numpy as np
+import collections
 import tidy_headers
+
 
 from yaqd_core import Base, logging
 
@@ -18,7 +19,8 @@ data_directory = pathlib.Path("Desktop/gas-uptake-data")
 
 def write_row(path, row):
     with open(self.record_path, "ab") as f:
-        np.savetxt(f, row, fmt="%8.6f", delimiter="\t", newline="\t")
+        for n in row:
+            f.write(b"%8.6f" % n)
         f.write(b"\n")
 
 
@@ -29,7 +31,7 @@ class GasUptakeDirector(Base):
     def __init__(self, name, config, config_filepath):
         super().__init__(name, config, config_filepath)
         self.recording = False
-        self.temps = np.full(100, np.nan)
+        self.temps = collections.deque(maxlen=100)
 
     def begin_recording(self):
         # create file
@@ -93,9 +95,8 @@ class GasUptakeDirector(Base):
         # PID
         p = 0.25 * (self.temps - self.set_temperature)
         i = 0.2 * np.sum(self.temps - self_temperature) / 100
-        d = 0.001 * 0
-        duty = p + i + d
-        print("duty", p, i, d, duty)
+        duty = p + i
+        print("duty", p, i, duty)
         if np.isnan(duty):
             self._heater_client.set_value(0)
         elif duty < -1:
