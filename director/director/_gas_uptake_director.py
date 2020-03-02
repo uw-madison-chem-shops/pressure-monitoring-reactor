@@ -33,6 +33,7 @@ class GasUptakeDirector(Base):
         super().__init__(name, config, config_filepath)
         self.recording = False
         self.temps = collections.deque(maxlen=100)
+        self.set_temp = 0
         # initialize clients
         self._heater_client = yaqc.Client(38455)
         self._heater_client.set_value(0)
@@ -75,7 +76,7 @@ class GasUptakeDirector(Base):
         self.recording = False
 
     def set_temperature(self, temp):
-        self.set_temperature = temp
+        self.set_temp = temp
 
     async def _poll(self):
         print("poll")
@@ -108,7 +109,7 @@ class GasUptakeDirector(Base):
         if self.recording:
             write_row(path, row)
         # PID
-        p = 0.25 * (row[1] - self.set_temperature)
+        p = 0.25 * (row[1] - self.set_temp)
         i = 0.2 * sum(self.temps - self_temperature) / 100
         duty = p + i
         print("duty", p, i, duty)
