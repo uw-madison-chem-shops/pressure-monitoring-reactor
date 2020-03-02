@@ -39,7 +39,7 @@ class GasUptakeDirector(Base):
         self.record_path = data_directory / fname
         headers = {}
         headers["timestamp"] = now.isoformat()
-        headers["gas-uptake version"] = __version__
+        #headers["gas-uptake version"] = __version__
         headers["temperature units"] = "C"
         headers["pressure units"] = "PSI"
         cs = []
