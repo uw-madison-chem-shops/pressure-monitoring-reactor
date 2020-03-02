@@ -84,7 +84,6 @@ class GasUptakeDirector(Base):
         m = self._temp_client.get_measured()
         self._temp_client.measure()
         value = m["temperature"]
-        self.temp_table["current"].write(value, units="deg_C")
         row.append(value)
         # pressure
         measured = []
@@ -101,7 +100,6 @@ class GasUptakeDirector(Base):
                 if value < 0:
                     value = np.nan
                 measured.append(value)
-                self.pressure_table[f"sensor_{len(measured)-1}"].write(value)
                 row.append(value)
             client.measure()
         # append to data
