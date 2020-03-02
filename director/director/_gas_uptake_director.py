@@ -36,6 +36,7 @@ class GasUptakeDirector(Base):
         self.recording = False
         self.temps = collections.deque(maxlen=100)
         self.set_temp = 0
+        self.row = []
         # initialize clients
         self._heater_client = yaqc.Client(38455)
         self._heater_client.set_value(0)
@@ -82,7 +83,6 @@ class GasUptakeDirector(Base):
         self.set_temp = temp
 
     async def _poll(self):
-        print("poll")
         row = [time.time()]
         # temperature
         m = self._temp_client.get_measured()
@@ -108,6 +108,7 @@ class GasUptakeDirector(Base):
             client.measure()
         # append to data
         self.temps.append(row[1])
+        self.row = row
         # write to file
         if self.recording:
             write_row(self.record_path, row)
@@ -129,3 +130,6 @@ class GasUptakeDirector(Base):
         while True:
             self._loop.create_task(self._poll())
             await asyncio.sleep(1)
+
+    def get_last_reading(self):
+        return self.row

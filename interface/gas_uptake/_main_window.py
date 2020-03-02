@@ -6,9 +6,8 @@ import pathlib
 import numpy as np
 import pyqtgraph as pg
 import qtypes
-import tidy_headers
-import yaqc
 import PyQt5
+import yaqc
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .__version__ import *
 
@@ -41,8 +40,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         self.data = np.full((14, 10000), np.nan)
         self.recording = False
-        self.record_started = time.time()
-        self.record_file = None
+        self.client = yaqc.Client(39000)
+        self.record_started = 0
 
     def _begin_poll_loop(self):
         self.poll_timer = QtCore.QTimer()
@@ -135,107 +134,26 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         return pw
 
-    def load_hardware(self):
-        self._heater_client = yaqc.Client(38455)
-        self._heater_client.set_value(0)
-        self._temp_client = yaqc.Client(39001)
-        self._temp_client.measure()
-        self._pressure_client_a = yaqc.Client(39100)
-        self._pressure_client_a.set_state(gain=2, size=16)
-        self._pressure_client_a.measure()
-        self._pressure_client_b = yaqc.Client(39101)
-        self._pressure_client_b.set_state(gain=2, size=16)
-        self._pressure_client_b.measure()
-        self._pressure_client_c = yaqc.Client(39102)
-        self._pressure_client_c.set_state(gain=2, size=16)
-        self._pressure_client_c.measure()
-        #
-        self._begin_poll_loop()
-
     def _on_record(self):
-        self.poll_timer.stop()
         self.recording = not self.recording
         if self.recording:
+            self.client.begin_recording()
             # button color
             self.record_button.set_background("#c82829")
             self.record_button.setText("STOP RECORDING")
-            # create file
-            now = datetime.datetime.now()
-            fname = "gas-uptake_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
-            self.record_path = data_directory / fname
-            headers = {}
-            headers["timestamp"] = now.isoformat()
-            headers["gas-uptake version"] = __version__
-            headers["temperature units"] = "C"
-            headers["pressure units"] = "PSI"
-            cs = []
-            cs.append("labtime")
-            cs.append("temperature")
-            for i in range(12):
-                cs.append(f"pressure_{i}")
-            headers["column"] = cs
-            tidy_headers.write(self.record_path, headers)
             # array
             self.data = np.full((14, 10000), np.nan)
             self.record_started = time.mktime(now.timetuple())
         else:
+            self.client.stop_recording()
             # button color
             self.record_button.set_background("#718c00")
             self.record_button.setText("BEGIN RECORDING")
         self.poll_timer.start(1000)
 
     def poll(self):
-        row = [time.time()]
-        # temperature
-        m = self._temp_client.get_measured()
-        self._temp_client.measure()
-        value = m["temperature"]
-        self.temp_table["current"].write(value, units="deg_C")
-        row.append(value)
-        # pressure
-        measured = []
-        for client in [
-            self._pressure_client_a,
-            self._pressure_client_b,
-            self._pressure_client_c,
-        ]:
-            m = client.get_measured()
-            for channel in range(4):
-                value = m[f"channel_{channel}"]
-                value -= 4
-                value *= 150 / 20  # mA to PSI
-                if value < 0:
-                    value = np.nan
-                measured.append(value)
-                self.pressure_table[f"sensor_{len(measured)-1}"].write(value)
-                row.append(value)
-            client.measure()
-        # append to data
         self.data = np.roll(self.data, shift=-1, axis=1)
-        self.data[:, -1] = row
-        self.update_plot()
-        # write to file
-        if self.recording:
-            with open(self.record_path, "ab") as f:
-                np.savetxt(f, row, fmt="%8.6f", delimiter="\t", newline="\t")
-                f.write(b"\n")
-        # PID
-        set = self.temp_table["set"]()
-        p = 0.25 * (self.data[1, -1] - set)
-        i = 0.2 * np.sum(self.data[1, -100:] - set) / 100
-        d = 0.001 * 0
-        duty = p + i + d
-        print("duty", p, i, d, duty)
-        if np.isnan(duty):
-            self._heater_client.set_value(0)
-        elif duty < -1:
-            self._heater_client.set_value(1)
-        elif duty > 0:
-            self._heater_client.set_value(0)
-        else:
-            on = -duty
-            off = 1 + duty
-            self._heater_client.blink(on, off)
+        self.data[:, -1] = self.client.get_last_reading()
 
     def set_temperature(self, value, units):
         print("set temperature", value, units)
@@ -260,7 +178,6 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     main_window = MainWindow(app)
     main_window.create_central_widget()
-    main_window.load_hardware()
     main_window.showMaximized()
     sys.exit(app.exec_())
 
