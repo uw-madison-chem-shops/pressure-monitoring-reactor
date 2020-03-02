@@ -109,17 +109,17 @@ class GasUptakeDirector(Base):
         if self.recording:
             write_row(path, row)
         # PID
-        p = 0.25 * (row[1] - self.set_temp)
-        i = 0.2 * sum([t - self.set_temp for t in self.temps]) / len(self.temps)
+        p = 0.25 * (self.set_temp -  self.temps[-1])
+        i = 0.2 * sum([self.set_temp - t for t in self.temps]) / len(self.temps)
         duty = p + i
         print("duty", p, i, duty)
-        if duty < -1:
+        if duty >= -1:
             self._heater_client.set_value(1)
-        elif duty > 0:
+        elif duty <= 0:
             self._heater_client.set_value(0)
         else:
-            on = -duty
-            off = 1 + duty
+            on = duty
+            off = 1 - duty
             self._heater_client.blink(on, off)
 
     async def _runner(self):
