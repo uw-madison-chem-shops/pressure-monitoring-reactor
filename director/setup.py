@@ -15,7 +15,7 @@ with open("README.md") as readme_file:
     readme = readme_file.read()
 
 
-requirements = ["yaqd-core", "tidy-headers"]
+requirements = ["yaqd-core"]
 
 extra_requirements = {"dev": ["black", "pre-commit"]}
 extra_files = {"director": ["VERSION"]}

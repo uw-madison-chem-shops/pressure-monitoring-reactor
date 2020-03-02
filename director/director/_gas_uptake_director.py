@@ -5,7 +5,6 @@ import asyncio
 from typing import Dict, Any
 import datetime
 import collections
-import tidy_headers
 
 
 from yaqd_core import Base, logging
@@ -49,7 +48,7 @@ class GasUptakeDirector(Base):
         for i in range(12):
             cs.append(f"pressure_{i}")
         headers["column"] = cs
-        tidy_headers.write(self.record_path, headers)
+        #tidy_headers.write(self.record_path, headers)
         # finish
         self.recording = True
         return self.record_path
