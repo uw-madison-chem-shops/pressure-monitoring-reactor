@@ -51,7 +51,7 @@ class GasUptakeDirector(Base):
         #tidy_headers.write(self.record_path, headers)
         # finish
         self.recording = True
-        return self.record_path
+        return self.record_path.as_posix()
 
     def stop_recording(self):
         self.recording = False
