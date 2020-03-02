@@ -31,6 +31,7 @@ class GasUptakeDirector(Base):
         super().__init__(name, config, config_filepath)
         self.recording = False
         self.temps = collections.deque(maxlen=100)
+        self._loop.create_task(self._runner())
 
     def begin_recording(self):
         # create file
@@ -59,7 +60,8 @@ class GasUptakeDirector(Base):
     def set_temperature(self, temp):
         self.set_temperature = temp
 
-    def poll(self):
+    async def _poll(self):
+        print("poll")
         row = [time.time()]
         # temperature
         m = self._temp_client.get_measured()
@@ -106,3 +108,8 @@ class GasUptakeDirector(Base):
             on = -duty
             off = 1 + duty
             self._heater_client.blink(on, off)
+
+    async def _runner(self):
+        while True:
+            self._loop.create_task(self._poll())
+            await asyncio.sleep(1)
