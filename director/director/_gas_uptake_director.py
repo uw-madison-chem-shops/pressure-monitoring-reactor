@@ -110,7 +110,7 @@ class GasUptakeDirector(Base):
             write_row(path, row)
         # PID
         p = 0.25 * (row[1] - self.set_temp)
-        i = 0.2 * sum(self.temps - self_temperature) / 100
+        i = 0.2 * sum(self.temps - self.set_temp) / 100
         duty = p + i
         print("duty", p, i, duty)
         if duty < -1:
