@@ -98,24 +98,21 @@ class GasUptakeDirector(Base):
                 value -= 4
                 value *= 150 / 20  # mA to PSI
                 if value < 0:
-                    value = np.nan
+                    value = float('nan')
                 measured.append(value)
                 row.append(value)
             client.measure()
         # append to data
-        self.temps = np.roll(self.temps, shift=-1)
-        self.temps[-1] = row[1]
+        self.temps.append(row[1])
         # write to file
         if self.recording:
             write_row(path, row)
         # PID
-        p = 0.25 * (self.temps - self.set_temperature)
-        i = 0.2 * np.sum(self.temps - self_temperature) / 100
+        p = 0.25 * (row[1] - self.set_temperature)
+        i = 0.2 * sum(self.temps - self_temperature) / 100
         duty = p + i
         print("duty", p, i, duty)
-        if np.isnan(duty):
-            self._heater_client.set_value(0)
-        elif duty < -1:
+        if duty < -1:
             self._heater_client.set_value(1)
         elif duty > 0:
             self._heater_client.set_value(0)
