@@ -36,6 +36,18 @@ Refer to the Supplementary Material PDF associated with the main publication for
 
 ## Manifold
 
+A CAD drawing of the gas distribution manifold can be found in the `manifold` folder.
+This drawing was created using AutoCAD software, and software capable of reading `.dwg` files is required to open or manipulate it.
+For convinience, a machinist drawing as PDF is also shared.
+
+Refer to the Supplementary Material PDF associated with the main publication for assembly instructions.
+
 ## Electronics
 
+CAD drawings describing the panel cutouts for the electronics box can be found in the `electronics` folder.
+
 ## Software
+
+Custom software developed for this reactor can be found in the `software` folder.
+This is separated out into the director and interface, as described in the Supplementary Material PDF.
+Further instructions for installing this software onto the Raspberry Pi can be found in the `software` folder.
