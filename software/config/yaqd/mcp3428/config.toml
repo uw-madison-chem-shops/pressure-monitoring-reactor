@@ -1,0 +1,11 @@
+[a]
+port = 39100
+i2c_addr = 106
+
+[b]
+port = 39101
+i2c_addr = 110
+
+[c]
+port = 39102
+i2c_addr = 104 

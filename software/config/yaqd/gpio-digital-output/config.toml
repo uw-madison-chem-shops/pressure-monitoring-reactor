@@ -1,0 +1,5 @@
+[heater]
+port = 38455
+index = 18
+mode = "out" 
+pull_up = true
