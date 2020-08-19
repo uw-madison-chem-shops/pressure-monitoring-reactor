@@ -8,12 +8,9 @@ from typing import Dict, Any
 import datetime
 import collections
 import pathlib
-from yaqd_core import Base, logging
+from yaqd_core import Base
 
 from .__version__ import *
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 os.chdir(os.path.expanduser("~"))
 data_directory = pathlib.Path("Desktop/gas-uptake-data")
@@ -29,7 +26,6 @@ def write_row(path, row):
 
 class GasUptakeDirector(Base):
     _kind = "gas-uptake-director"
-    defaults: Dict[str, Any] = {}
 
     def __init__(self, name, config, config_filepath):
         super().__init__(name, config, config_filepath)
@@ -37,20 +33,20 @@ class GasUptakeDirector(Base):
         self.temps = collections.deque(maxlen=100)
         self.set_temp = 0
         self.row = []
-        time.sleep(30)
+        #time.sleep(30)
         # initialize clients
         self._heater_client = yaqc.Client(38455)
-        self._heater_client.set_value(0)
+        self._heater_client.set_position(0)
         self._temp_client = yaqc.Client(39001)
         self._temp_client.measure()
         self._pressure_client_a = yaqc.Client(39100)
-        self._pressure_client_a.set_state(gain=2, size=16)
+        #self._pressure_client_a.set_state(gain=2, size=16)
         self._pressure_client_a.measure()
         self._pressure_client_b = yaqc.Client(39101)
-        self._pressure_client_b.set_state(gain=2, size=16)
+        #self._pressure_client_b.set_state(gain=2, size=16)
         self._pressure_client_b.measure()
         self._pressure_client_c = yaqc.Client(39102)
-        self._pressure_client_c.set_state(gain=2, size=16)
+        #self._pressure_client_c.set_state(gain=2, size=16)
         self._pressure_client_c.measure()
         # begin looping
         self._loop.create_task(self._runner())
@@ -119,9 +115,9 @@ class GasUptakeDirector(Base):
         duty = p + i
         print("duty", p, i, duty)
         if duty >= -1:
-            self._heater_client.set_value(1)
+            self._heater_client.set_position(1)
         elif duty <= 0:
-            self._heater_client.set_value(0)
+            self._heater_client.set_position(0)
         else:
             on = duty
             off = 1 - duty

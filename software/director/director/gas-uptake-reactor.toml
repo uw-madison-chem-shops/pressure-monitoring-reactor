@@ -1,0 +1,3 @@
+protocol = "gas-uptake-director"
+doc = "Stahl group gas uptake director."
+traits = ["is-daemon"]
