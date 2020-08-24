@@ -1,0 +1,18 @@
+protocol = "gas-uptake-director"
+doc = "Stahl group gas uptake director."
+traits = ["is-daemon"]
+
+[messages]
+
+[messages.begin_recording]
+doc = "Begin recording."
+
+[messages.stop_recording]
+doc = "stop recording."
+
+[messages.set_temperature]
+doc = "Set temperature."
+request = [{"name"="temperature", "type"="float"}]
+
+[messages.get_last_reading]
+response = {"type"="array", "items"=["double", "int"]}

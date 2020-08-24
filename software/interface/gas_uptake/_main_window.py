@@ -6,9 +6,8 @@ import pathlib
 import numpy as np
 import pyqtgraph as pg
 import qtypes
-import PyQt5
 import yaqc
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 from .__version__ import *
 
 
@@ -41,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data = np.full((14, 10000), np.nan)
         self.recording = False
         self.client = yaqc.Client(39000)
-        self.record_started = 0
+        self.record_started = time.time()
         #
         self._begin_poll_loop()
 
@@ -81,6 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.temp_table.append(qtypes.Number(name="current", disabled=True))
         n = qtypes.Number(name="set")
         n.limits.write(-100, 170)
+        n.updated.connect(self.set_temperature)
         self.temp_table.append(n)
         self.status_scroll_area.add_widget(self.temp_table)
         # pressure
@@ -145,7 +145,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.record_button.setText("STOP RECORDING")
             # array
             self.data = np.full((14, 10000), np.nan)
-            self.record_started = time.mktime(now.timetuple())
+            self.record_started = time.time()
         else:
             self.client.stop_recording()
             # button color
@@ -162,11 +162,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pressure_table[f"sensor_{i}"].write(row[i+2])
         self.update_plot()
 
-    def set_temperature(self, value, units):
-        print("set temperature", value, units)
-
-    def tare_pressures(self):
-        print("tare pressures")
+    def set_temperature(self):
+        val = self.temp_table["set"].read()
+        print("set temperature",val)
+        self.client.set_temperature(val)
 
     def update_plot(self):
         xi = self.data[0] - self.record_started

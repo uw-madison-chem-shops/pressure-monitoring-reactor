@@ -3,6 +3,7 @@ __all__ = ["GasUptakeDirector"]
 import os
 import time
 import yaqc
+import gpiozero
 import asyncio
 from typing import Dict, Any
 import datetime
@@ -28,15 +29,16 @@ class GasUptakeDirector(Base):
     _kind = "gas-uptake-director"
 
     def __init__(self, name, config, config_filepath):
+        self.i = 0
         super().__init__(name, config, config_filepath)
         self.recording = False
-        self.temps = collections.deque(maxlen=100)
+        self.temps = collections.deque(maxlen=500)
         self.set_temp = 0
         self.row = []
         #time.sleep(30)
         # initialize clients
-        self._heater_client = yaqc.Client(38455)
-        self._heater_client.set_position(0)
+        self._heater_client = gpiozero.DigitalOutputDevice(pin=18)  #yaqc.Client(38455)
+        self._heater_client.value = 0
         self._temp_client = yaqc.Client(39001)
         self._temp_client.measure()
         self._pressure_client_a = yaqc.Client(39100)
@@ -50,6 +52,10 @@ class GasUptakeDirector(Base):
         self._pressure_client_c.measure()
         # begin looping
         self._loop.create_task(self._runner())
+
+    def _connection_lost(self, peername):
+        super()._connection_lost(peername)
+        self.set_temp = 0
 
     def begin_recording(self):
         # create file
@@ -110,18 +116,17 @@ class GasUptakeDirector(Base):
         if self.recording:
             write_row(self.record_path, row)
         # PID
-        p = 0.25 * (self.set_temp -  self.temps[-1])
-        i = 0.2 * sum([self.set_temp - t for t in self.temps]) / len(self.temps)
+        p = 0.1 * (self.set_temp -  self.temps[-1])
+        i = 0.3 * sum([self.set_temp - t for t in self.temps]) / len(self.temps)
         duty = p + i
-        print("duty", p, i, duty)
-        if duty >= -1:
-            self._heater_client.set_position(1)
+        print(f"setpoint: {self.set_temp}, duty: {duty}")
+        if duty >= 1:
+            self._heater_client.value = 1
         elif duty <= 0:
-            self._heater_client.set_position(0)
+            self._heater_client.value = 0
         else:
-            on = duty
-            off = 1 - duty
-            self._heater_client.blink(on, off)
+            duty = round(duty, 2)
+            self._heater_client.blink(on_time=duty, off_time=10, n=1)
 
     async def _runner(self):
         while True:
@@ -129,4 +134,5 @@ class GasUptakeDirector(Base):
             await asyncio.sleep(1)
 
     def get_last_reading(self):
+        print(self.row)
         return self.row

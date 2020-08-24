@@ -29,6 +29,11 @@
     },
     "doc": "Stahl group gas uptake director.",
     "messages": {
+        "begin_recording": {
+            "doc": "Begin recording.",
+            "request": [],
+            "response": "null"
+        },
         "busy": {
             "doc": "Returns true if daemon is currently busy.",
             "request": [],
@@ -43,6 +48,16 @@
             "doc": "String representing the absolute filepath of the configuration file on the host machine.\n",
             "request": [],
             "response": "string"
+        },
+        "get_last_reading": {
+            "request": [],
+            "response": {
+                "items": [
+                    "double",
+                    "int"
+                ],
+                "type": "array"
+            }
         },
         "get_state": {
             "doc": "Get version of the running daemon",
@@ -60,6 +75,16 @@
                 ]
             }
         },
+        "set_temperature": {
+            "doc": "Set temperature.",
+            "request": [
+                {
+                    "name": "temperature",
+                    "type": "float"
+                }
+            ],
+            "response": "null"
+        },
         "shutdown": {
             "doc": "Cleanly shutdown (or restart) daemon.",
             "request": [
@@ -69,6 +94,11 @@
                     "type": "boolean"
                 }
             ],
+            "response": "null"
+        },
+        "stop_recording": {
+            "doc": "stop recording.",
+            "request": [],
             "response": "null"
         }
     },

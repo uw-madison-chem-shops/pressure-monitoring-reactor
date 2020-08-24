@@ -1,7 +1,7 @@
 # importing pyside2 submodules here fixes an import problem
 #   that I don't understand
 #   --- Blaise 2019-10-12
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtWidgets, QtGui
 
 import appdirs
 import os
