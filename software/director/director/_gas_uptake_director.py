@@ -9,6 +9,7 @@ from typing import Dict, Any
 import datetime
 import collections
 import pathlib
+from simple_pid import PID
 from yaqd_core import IsDaemon
 
 from .__version__ import *
@@ -40,17 +41,18 @@ class GasUptakeDirector(IsDaemon):
         self._heater_client = gpiozero.DigitalOutputDevice(pin=18)  #yaqc.Client(38455)
         self._heater_client.value = 0
         self._temp_client = yaqc.Client(39001)
-        self._temp_client.measure()
+        self._temp_client.measure(loop=True)
         self._pressure_client_a = yaqc.Client(39100)
         #self._pressure_client_a.set_state(gain=2, size=16)
-        self._pressure_client_a.measure()
+        self._pressure_client_a.measure(loop=True)
         self._pressure_client_b = yaqc.Client(39101)
         #self._pressure_client_b.set_state(gain=2, size=16)
-        self._pressure_client_b.measure()
+        self._pressure_client_b.measure(loop=True)
         self._pressure_client_c = yaqc.Client(39102)
         #self._pressure_client_c.set_state(gain=2, size=16)
-        self._pressure_client_c.measure()
+        self._pressure_client_c.measure(loop=True)
         # begin looping
+        self._pid = PID(Kp=0.2, Ki=0.001, Kd=0.01, setpoint=0, proportional_on_measurement=True)
         self._loop.create_task(self._runner())
 
     def _connection_lost(self, peername):
@@ -84,12 +86,12 @@ class GasUptakeDirector(IsDaemon):
 
     def set_temperature(self, temp):
         self.set_temp = temp
+        self._pid.reset()
 
     async def _poll(self):
         row = [time.time()]
         # temperature
         m = self._temp_client.get_measured()
-        self._temp_client.measure()
         value = m["temperature"]
         row.append(value)
         # pressure
@@ -113,7 +115,6 @@ class GasUptakeDirector(IsDaemon):
                 measured.append(value)
                 self._last_pressure_readings[i] = value
                 row.append(value)
-            client.measure()
         # append to data
         self.temps.append(row[1])
         self.row = row
@@ -121,10 +122,9 @@ class GasUptakeDirector(IsDaemon):
         if self.recording:
             write_row(self.record_path, row)
         # PID
-        p = 0.1 * (self.set_temp -  self.temps[-1])
-        i = 0.3 * sum([self.set_temp - t for t in self.temps]) / len(self.temps)
-        duty = p + i
-        print(f"setpoint: {self.set_temp}, duty: {duty}")
+        self._pid.setpoint = self.set_temp
+        duty = self._pid(row[1])
+        print(self.set_temp, row[1], duty, self._pid.components)
         if duty >= 1:
             self._heater_client.value = 1
         elif duty <= 0:
@@ -139,7 +139,6 @@ class GasUptakeDirector(IsDaemon):
             await asyncio.sleep(1)
 
     def get_last_reading(self):
-        print(self.row)
         return self.row
 
     def tare_pressure(self, known_value, channel_index):
