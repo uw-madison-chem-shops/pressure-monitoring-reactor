@@ -97,7 +97,7 @@ class GasUptakeDirector(IsDaemon):
         # pressure
         measured = []
         i = 0
-        self._last_pressure_readings = dict
+        self._last_pressure_readings = dict()
         for client in [
             self._pressure_client_a,
             self._pressure_client_b,
