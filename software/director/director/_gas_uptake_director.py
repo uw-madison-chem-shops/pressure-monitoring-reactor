@@ -9,7 +9,7 @@ from typing import Dict, Any
 import datetime
 import collections
 import pathlib
-from yaqd_core import Base
+from yaqd_core import IsDaemon
 
 from .__version__ import *
 
@@ -25,7 +25,7 @@ def write_row(path, row):
         f.write("\n")
 
 
-class GasUptakeDirector(Base):
+class GasUptakeDirector(IsDaemon):
     _kind = "gas-uptake-director"
 
     def __init__(self, name, config, config_filepath):
@@ -94,6 +94,8 @@ class GasUptakeDirector(Base):
         row.append(value)
         # pressure
         measured = []
+        i = 0
+        self._last_pressure_readings = dict
         for client in [
             self._pressure_client_a,
             self._pressure_client_b,
@@ -102,11 +104,14 @@ class GasUptakeDirector(Base):
             m = client.get_measured()
             for channel in range(4):
                 value = m[f"channel_{channel}"]
+                offset = self._state[f"channel_{i}_offset"]; i += 1
+                value -= offset
                 value -= 4
                 value *= 150 / 20  # mA to PSI
                 if value < 0:
                     value = float('nan')
                 measured.append(value)
+                self._last_pressure_readings[i] = value
                 row.append(value)
             client.measure()
         # append to data
@@ -136,3 +141,20 @@ class GasUptakeDirector(Base):
     def get_last_reading(self):
         print(self.row)
         return self.row
+
+    def tare_pressure(self, known_value, channel_index):
+        """Apply offset channel based on known pressure value.
+
+        Parameters
+        ----------
+        known_value : double
+            Known pressure, PSI.
+        channel_index : int
+            Channel index, 0 through 11.
+        """
+        # convert from PSI to expected mA
+        value = known_value * 20 / 150
+        value += 4
+        # find offset
+        offset = self._last_pressure_readings[channel_index] - value
+        self._state[f"channel_{channel_index}_offset"] = offset

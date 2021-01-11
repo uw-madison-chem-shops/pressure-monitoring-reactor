@@ -16,3 +16,70 @@ request = [{"name"="temperature", "type"="float"}]
 
 [messages.get_last_reading]
 response = {"type"="array", "items"=["double", "int"]}
+
+[messages.tare_pressure]
+request = [
+  {"name"="known_value", "type"="double", "doc"="Pressure, PSI"},
+  {"name"="channel_index", "type"="int"}
+]
+[state]
+
+[state.channel_0_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_1_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_2_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_3_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_4_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_5_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_6_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_7_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_8_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_9_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_10_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0
+
+[state.channel_11_offset]
+doc = "Pressure transducer offset, in mA."
+type = "double"
+default = 0.0

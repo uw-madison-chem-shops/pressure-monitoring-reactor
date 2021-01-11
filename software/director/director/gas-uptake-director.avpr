@@ -2,6 +2,7 @@
     "config": {
         "make": {
             "default": null,
+            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -9,6 +10,7 @@
         },
         "model": {
             "default": null,
+            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -16,11 +18,13 @@
         },
         "port": {
             "doc": "TCP port for daemon to occupy.",
+            "origin": "is-daemon",
             "type": "int"
         },
         "serial": {
             "default": null,
             "doc": "Serial number for the particular device represented by the daemon",
+            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -36,16 +40,19 @@
         },
         "busy": {
             "doc": "Returns true if daemon is currently busy.",
+            "origin": "is-daemon",
             "request": [],
             "response": "boolean"
         },
         "get_config": {
             "doc": "Full configuration for the individual daemon as defined in the TOML file.\nThis includes defaults and shared settings not directly specified in the daemon-specific TOML table.\n",
+            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
         "get_config_filepath": {
             "doc": "String representing the absolute filepath of the configuration file on the host machine.\n",
+            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
@@ -61,11 +68,13 @@
         },
         "get_state": {
             "doc": "Get version of the running daemon",
+            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
         "id": {
             "doc": "JSON object with information to identify the daemon, including name, kind, make, model, serial.\n",
+            "origin": "is-daemon",
             "request": [],
             "response": {
                 "type": "map",
@@ -87,6 +96,7 @@
         },
         "shutdown": {
             "doc": "Cleanly shutdown (or restart) daemon.",
+            "origin": "is-daemon",
             "request": [
                 {
                     "default": false,
@@ -100,11 +110,86 @@
             "doc": "stop recording.",
             "request": [],
             "response": "null"
+        },
+        "tare_pressure": {
+            "request": [
+                {
+                    "doc": "Pressure, PSI",
+                    "name": "known_value",
+                    "type": "double"
+                },
+                {
+                    "name": "channel_index",
+                    "type": "int"
+                }
+            ],
+            "response": "null"
         }
     },
     "protocol": "gas-uptake-director",
     "requires": [],
-    "trait": "is-daemon",
+    "state": {
+        "channel_0_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_10_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_11_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_1_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_2_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_3_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_4_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_5_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_6_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_7_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_8_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        },
+        "channel_9_offset": {
+            "default": 0.0,
+            "doc": "Pressure transducer offset, in mA.",
+            "type": "double"
+        }
+    },
     "traits": [
         "is-daemon"
     ],
