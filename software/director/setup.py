@@ -15,23 +15,24 @@ with open("README.md") as readme_file:
     readme = readme_file.read()
 
 
-requirements = ["yaqd-core", "yaqc"]
+requirements = ["yaqd-core", "yaqc", "simple-pid"]
 
 extra_requirements = {"dev": ["black", "pre-commit"]}
 extra_files = {"director": ["VERSION"]}
 
 setup(
     author="Blaise Thompson",
-    author_email="bthompson@chem.wisc.edu",
+    author_email="blaise.thompson@wisc.edu",
     python_requires=">=3.7",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering",
     ],
     description="Gas uptake director.",
