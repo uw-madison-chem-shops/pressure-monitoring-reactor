@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.temp_table.append(None, "temperature")
         self.temp_table.append(qtypes.Number(name="current", disabled=True))
         n = qtypes.Number(name="set")
-        n.limits.write(-100, 170)
+        n.limits.set(-100, 170)
         n.updated.connect(self.set_temperature)
         self.temp_table.append(n)
         self.status_scroll_area.add_widget(self.temp_table)
@@ -173,20 +173,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.poll_timer.start(1000)
 
     def _on_tare(self, channel_index):
-        known_value = self.known_tare_pressure.read()
+        known_value = self.known_tare_pressure.get()
         self.client.tare_pressure(known_value, channel_index)
 
     def poll(self):
         row = self.client.get_last_reading()
         self.data = np.roll(self.data, shift=-1, axis=1)
         self.data[:, -1] = row
-        self.temp_table["current"].write(row[1])
+        self.temp_table["current"].set(row[1])
         for i in range(12):
-            self.pressure_table[f"sensor_{i}"].write(row[i+2])
+            self.pressure_table[f"sensor_{i}"].set(row[i+2])
         self.update_plot()
 
     def set_temperature(self):
-        val = self.temp_table["set"].read()
+        val = self.temp_table["set"].get()
         print("set temperature",val)
         self.client.set_temperature(val)
 
