@@ -7,6 +7,7 @@ import numpy as np
 import pyqtgraph as pg
 import qtypes
 import yaqc
+from functools import partial
 from PySide2 import QtCore, QtGui, QtWidgets
 from .__version__ import *
 
@@ -92,21 +93,39 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         layout.addWidget(self.status_widget, 0)
         # main widget -----------------------------------------------------------------------------
-        main_widget = QtWidgets.QWidget()
-        main_widget.setLayout(QtWidgets.QVBoxLayout())
-        main_widget.layout().setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(main_widget, 1)
-        # hboxlayout
-        hbox_widget = QtWidgets.QWidget()
-        hbox_widget.setLayout(QtWidgets.QHBoxLayout())
-        hbox_widget.layout().setContentsMargins(0, 0, 0, 0)
-        main_widget.layout().addWidget(hbox_widget)
+        tab_widget = QtWidgets.QTabWidget()
+        layout.addWidget(tab_widget, 1)
+        # advanced
+        advanced = self._create_advanced()
+        tab_widget.addTab(advanced, "advanced")
         # graph
         self.graph = self._create_graph()
-        hbox_widget.layout().addWidget(self.graph)
+        tab_widget.addTab(self.graph, "graph")
+        tab_widget.setCurrentIndex(1)
         # finish
         self.central_widget.setLayout(layout)
         self.setCentralWidget(self.central_widget)
+
+    def _create_advanced(self):
+        widget = QtWidgets.QWidget()
+        widget.setLayout(QtWidgets.QHBoxLayout())
+        widget.layout().setContentsMargins(0, 0, 0, 0)
+        scroll_area = qtypes.widgets.ScrollArea()
+        widget.layout().addWidget(scroll_area, 0)
+        # known pressure
+        input_table = qtypes.widgets.InputTable()
+        input_table.append(None, "tare pressure")
+        self.known_tare_pressure = qtypes.Number(name="known pressure", value=14.696)
+        input_table.append(self.known_tare_pressure)
+        scroll_area.add_widget(input_table)
+        # tare buttons
+        for i in range(12):
+            button = qtypes.widgets.PushButton(f"TARE TRANSDUCER {i}")
+            button.clicked.connect(partial(self._on_tare, i))
+            scroll_area.add_widget(button)
+        # finish
+        widget.layout().addStretch(1)
+        return widget
 
     def _create_graph(self):
         pw = pg.PlotWidget()
@@ -152,6 +171,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.record_button.set_background("#718c00")
             self.record_button.setText("BEGIN RECORDING")
         self.poll_timer.start(1000)
+
+    def _on_tare(self, channel_index):
+        known_value = self.known_tare_pressure.read()
+        self.client.tare_pressure(known_value, channel_index)
 
     def poll(self):
         row = self.client.get_last_reading()

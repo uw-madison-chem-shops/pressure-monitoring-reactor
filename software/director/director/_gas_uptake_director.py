@@ -97,7 +97,7 @@ class GasUptakeDirector(IsDaemon):
         # pressure
         measured = []
         i = 0
-        self._last_pressure_readings = dict()
+        self._last_current_readings = dict()
         for client in [
             self._pressure_client_a,
             self._pressure_client_b,
@@ -106,15 +106,16 @@ class GasUptakeDirector(IsDaemon):
             m = client.get_measured()
             for channel in range(4):
                 value = m[f"channel_{channel}"]
-                offset = self._state[f"channel_{i}_offset"]; i += 1
+                self._last_current_readings[i] = value
+                offset = self._state[f"channel_{i}_offset"]
                 value -= offset
                 value -= 4
                 value *= 150 / 20  # mA to PSI
                 if value < 0:
                     value = float('nan')
                 measured.append(value)
-                self._last_pressure_readings[i] = value
                 row.append(value)
+                i += 1
         # append to data
         self.temps.append(row[1])
         self.row = row
@@ -124,7 +125,6 @@ class GasUptakeDirector(IsDaemon):
         # PID
         self._pid.setpoint = self.set_temp
         duty = self._pid(row[1])
-        print(self.set_temp, row[1], duty, self._pid.components)
         if duty >= 1:
             self._heater_client.value = 1
         elif duty <= 0:
@@ -155,5 +155,5 @@ class GasUptakeDirector(IsDaemon):
         value = known_value * 20 / 150
         value += 4
         # find offset
-        offset = self._last_pressure_readings[channel_index] - value
+        offset = self._last_current_readings[channel_index] - value
         self._state[f"channel_{channel_index}_offset"] = offset
