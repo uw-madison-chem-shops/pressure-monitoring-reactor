@@ -54,6 +54,7 @@ class GasUptakeDirector(IsDaemon):
         # begin looping
         self._pid = PID(Kp=0.2, Ki=0.001, Kd=0.01, setpoint=0, proportional_on_measurement=True)
         self._loop.create_task(self._runner())
+        self._loop.create_task(self._poll_temperature())
 
     def _connection_lost(self, peername):
         super()._connection_lost(peername)
@@ -117,7 +118,6 @@ class GasUptakeDirector(IsDaemon):
                 row.append(value)
                 i += 1
         # append to data
-        self.temps.append(row[1])
         self.row = row
         # write to file
         if self.recording:
@@ -132,6 +132,12 @@ class GasUptakeDirector(IsDaemon):
         else:
             duty = round(duty, 2)
             self._heater_client.blink(on_time=duty, off_time=10, n=1)
+
+    async def _poll_temperature(self):
+        d = self._temp_client.get_measured()
+        t = d["temperature"]
+        self.temps.append(t)
+        await asyncio.sleep(1)
 
     async def _runner(self):
         while True:
