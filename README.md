@@ -1,7 +1,18 @@
 # A Gas Uptake/Evolution Reactor for Monitoring Gas-Liquid Chemical Transformations in Parallel
 
-This repository contains supplemental material for the paper "A Gas Uptake/Evolution Reactor for Monitoring Gas-Liquid Chemical Transformations in Parallel".
+This repository contains supplemental material for the paper "A Gas Uptake/Evolution Reactor for Monitoring Gas-Liquid Chemical Transformations in Parallel". 
+[doi:10.1063/5.0043007](https://doi.org/10.1063/5.0043007)
 Please read the manuscript for more context about these materials.
+
+## Repository
+
+This repository is being mirrored to several version control systems in an attempt to ensure maximum avaliability.
+
+| name           | url                                                                  |
+| -------------- | -------------------------------------------------------------------- | 
+| Chem (primary) | https://git.chem.wisc.edu/stahl-group/pressure-monitoring-reactor    |
+| GitHub         | https://github.com/uw-madison-chem-shops/pressure-monitoring-reactor | 
+| GitLab         | https://gitlab.com/uw-madison-chem-shops/pressure-monitoring-reactor |
 
 ## Reactor Cell
 
