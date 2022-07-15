@@ -22,6 +22,10 @@ request = [
   {"name"="known_value", "type"="double", "doc"="Pressure, PSI"},
   {"name"="channel_index", "type"="int"}
 ]
+
+[messages.set_poll_period]
+request = [{"name"="period", "type"="double"}]
+
 [state]
 
 [state.channel_0_offset]
@@ -83,3 +87,8 @@ default = 0.0
 doc = "Pressure transducer offset, in mA."
 type = "double"
 default = 0.0
+
+[state.poll_period]
+doc = "Poll period in seconds."
+type = "double"
+default = 1.0

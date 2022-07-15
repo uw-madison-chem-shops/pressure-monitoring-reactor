@@ -136,7 +136,7 @@ class GasUptakeDirector(IsDaemon):
     async def _runner(self):
         while True:
             self._loop.create_task(self._poll())
-            await asyncio.sleep(1)
+            await asyncio.sleep(self._state["poll_period"])
 
     def get_last_reading(self):
         return self.row
@@ -157,3 +157,7 @@ class GasUptakeDirector(IsDaemon):
         # find offset
         offset = self._last_current_readings[channel_index] - value
         self._state[f"channel_{channel_index}_offset"] = offset
+
+    def set_poll_period(self, period):
+        period = max(period, 1)
+        self._state["poll_period"] = period

@@ -77,6 +77,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_scroll_area.add_widget(self.record_button)
         # temp
         self.temp_table = qtypes.widgets.InputTable()
+        self.temp_table.append(qtypes.Number(name="poll period (s)"))
+        self.temp_table["poll period (s)"].set(1)
+        self.temp_table["poll period (s)"].updated.connect(self.set_poll_period)
+        self.set_poll_period()
         self.temp_table.append(None, "temperature")
         self.temp_table.append(qtypes.Number(name="current", disabled=True))
         n = qtypes.Number(name="set")
@@ -117,6 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
         input_table.append(None, "tare pressure")
         self.known_tare_pressure = qtypes.Number(name="known pressure", value=14.696)
         input_table.append(self.known_tare_pressure)
+        self.temp_table["poll period (s)"].set(1)
         scroll_area.add_widget(input_table)
         # tare buttons
         for i in range(12):
@@ -189,6 +194,11 @@ class MainWindow(QtWidgets.QMainWindow):
         val = self.temp_table["set"].get()
         print("set temperature",val)
         self.client.set_temperature(val)
+
+    def set_poll_period(self):
+        val = self.temp_table["poll period (s)"].get()
+        print("poll period (s)",val)
+        self.client.set_poll_period(val)
 
     def update_plot(self):
         xi = self.data[0] - self.record_started

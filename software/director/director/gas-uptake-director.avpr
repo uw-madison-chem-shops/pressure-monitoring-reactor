@@ -2,7 +2,6 @@
     "config": {
         "make": {
             "default": null,
-            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -10,7 +9,6 @@
         },
         "model": {
             "default": null,
-            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -18,13 +16,11 @@
         },
         "port": {
             "doc": "TCP port for daemon to occupy.",
-            "origin": "is-daemon",
             "type": "int"
         },
         "serial": {
             "default": null,
             "doc": "Serial number for the particular device represented by the daemon",
-            "origin": "is-daemon",
             "type": [
                 "null",
                 "string"
@@ -40,19 +36,16 @@
         },
         "busy": {
             "doc": "Returns true if daemon is currently busy.",
-            "origin": "is-daemon",
             "request": [],
             "response": "boolean"
         },
         "get_config": {
             "doc": "Full configuration for the individual daemon as defined in the TOML file.\nThis includes defaults and shared settings not directly specified in the daemon-specific TOML table.\n",
-            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
         "get_config_filepath": {
             "doc": "String representing the absolute filepath of the configuration file on the host machine.\n",
-            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
@@ -68,13 +61,11 @@
         },
         "get_state": {
             "doc": "Get version of the running daemon",
-            "origin": "is-daemon",
             "request": [],
             "response": "string"
         },
         "id": {
             "doc": "JSON object with information to identify the daemon, including name, kind, make, model, serial.\n",
-            "origin": "is-daemon",
             "request": [],
             "response": {
                 "type": "map",
@@ -83,6 +74,15 @@
                     "string"
                 ]
             }
+        },
+        "set_poll_period": {
+            "request": [
+                {
+                    "name": "period",
+                    "type": "double"
+                }
+            ],
+            "response": "null"
         },
         "set_temperature": {
             "doc": "Set temperature.",
@@ -96,7 +96,6 @@
         },
         "shutdown": {
             "doc": "Cleanly shutdown (or restart) daemon.",
-            "origin": "is-daemon",
             "request": [
                 {
                     "default": false,
@@ -188,8 +187,14 @@
             "default": 0.0,
             "doc": "Pressure transducer offset, in mA.",
             "type": "double"
+        },
+        "poll_period": {
+            "default": 1.0,
+            "doc": "Poll period in seconds.",
+            "type": "double"
         }
     },
+    "trait": "is-daemon",
     "traits": [
         "is-daemon"
     ],
