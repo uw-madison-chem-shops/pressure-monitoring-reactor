@@ -134,10 +134,11 @@ class GasUptakeDirector(IsDaemon):
             self._heater_client.blink(on_time=duty, off_time=10, n=1)
 
     async def _poll_temperature(self):
-        d = self._temp_client.get_measured()
-        t = d["temperature"]
-        self.temps.append(t)
-        await asyncio.sleep(1)
+        while True:
+            d = self._temp_client.get_measured()
+            t = d["temperature"]
+            self.temps.append(t)
+            await asyncio.sleep(1)
 
     async def _runner(self):
         while True:
