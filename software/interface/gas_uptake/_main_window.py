@@ -1,4 +1,6 @@
 import os
+import platformdirs
+import tomli
 import time
 import datetime
 import sys
@@ -8,28 +10,21 @@ import pyqtgraph as pg
 import qtypes
 import yaqc
 from functools import partial
-from PySide2 import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
+import yaqc_bluesky
 from .__version__ import *
 
 
 __here__ = pathlib.Path(__file__).absolute().parent
 
-os.chdir(os.path.expanduser("~"))
-data_directory = pathlib.Path("Desktop/gas-uptake-data")
-
-if not os.path.isdir(data_directory):
-    os.mkdir(data_directory)
-
 
 with open(__here__ / "colors.txt", "r") as f:
     colors = [line.strip() for line in f]
-    print(colors)
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, app):
+    def __init__(self, app, config):
         super().__init__()
-        # self.start_time = wt.kit.TimeStamp()
         self.app = app
         self.__version__ = __version__
         # title
@@ -40,7 +35,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         self.data = np.full((14, 10000), np.nan)
         self.recording = False
-        self.client = yaqc.Client(39000)
+        self.temp_client = yaqc.Client(host=config["temp_client"]["host"], port=config["temp_client"]["port"])
+        self.pressure_clients = dict()
+        self.pressure_clients["current_sense_upper"] = yaqc.Client(host=config["current_sense_upper"]["host"],
+                                                               port=config["current_sense_upper"]["port"])
+        self.pressure_clients["current_sense_lower"] = yaqc.Client(host=config["current_sense_lower"]["host"],
+                                                               port=config["current_sense_lower"]["port"])
         self.record_started = time.time()
         #
         self._begin_poll_loop()
@@ -50,87 +50,76 @@ class MainWindow(QtWidgets.QMainWindow):
         self.poll_timer.start(1000)  # milliseconds
         self.poll_timer.timeout.connect(self.poll)
 
-    def center(self):
-        """Center the window within the current screen."""
-        raise NotImplementedError
-        screen = QtGui.QDesktopWidget().screenGeometry()
-        size = self.geometry()
-        self.move(
-            (screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2
-        )
-
     def create_central_widget(self):
-        self.central_widget = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout()
-        # status widget ---------------------------------------------------------------------------
-        self.status_widget = QtWidgets.QWidget()
-        self.status_widget.setLayout(QtWidgets.QVBoxLayout())
-        self.status_widget.layout().setContentsMargins(0, 0, 0, 0)
-        # status_scroll_area
-        self.status_scroll_area = qtypes.widgets.ScrollArea()
-        self.status_widget.layout().addWidget(self.status_scroll_area, 0)
-        # record
-        self.record_button = qtypes.widgets.PushButton(
-            "BEGIN RECORDING", background="#718c00"
-        )
-        self.record_button.clicked.connect(self._on_record)
-        self.status_scroll_area.add_widget(self.record_button)
-        # temp
-        self.temp_table = qtypes.widgets.InputTable()
-        self.temp_table.append(qtypes.Number(name="poll period (s)"))
-        self.temp_table["poll period (s)"].set(1)
-        self.temp_table["poll period (s)"].updated.connect(self.set_poll_period)
-        self.set_poll_period()
-        self.temp_table.append(None, "temperature")
-        self.temp_table.append(qtypes.Number(name="current", disabled=True))
-        n = qtypes.Number(name="set")
-        n.limits.set(-100, 170)
-        n.updated.connect(self.set_temperature)
-        self.temp_table.append(n)
-        self.status_scroll_area.add_widget(self.temp_table)
+        splitter = QtWidgets.QSplitter()
+        self.root_item = qtypes.Null(label="")
+        self.tree_widget = qtypes.TreeWidget(self.root_item)
+        splitter.addWidget(self.tree_widget)
+        # recording
+        recording_node = qtypes.Null(label="Data")
+        self.record_button = qtypes.Button("Begin Recording")
+        self.record_button.updated_connect(self._on_record)
+        recording_node.append(self.record_button)
+        self.file_path_node = qtypes.String(label="Filepath")
+        recording_node.append(self.file_path_node)
+        self.time_recorded_node = qtypes.String(label="Time Recorded")
+        recording_node.append(self.time_recorded_node)
+        self.root_item.append(recording_node)
+        # temperature
+        temp_node = qtypes.Null(label="Temperature")
+        temp_node.append(qtypes.Float("Current Value", units="degC"))
+        self.temp_setpoint = qtypes.Float("Setpoint", units="degC")
+        self.temp_setpoint.updated_connect(self._on_temp_setpoint_updated)
+        self.temp_setpoint.set_value(0.0)
+        temp_node.append(self.temp_setpoint)
+        temp_advanced_node = qtypes.Null(label="Advanced")
+        temp_advanced_node.append(qtypes.Float("P"))
+        temp_advanced_node.append(qtypes.Float("I"))
+        temp_advanced_node.append(qtypes.Float("D"))
+        temp_node.append(temp_advanced_node)
+        self.root_item.append(temp_node)
         # pressure
-        self.pressure_table = qtypes.widgets.InputTable()
-        self.pressure_table.append(None, label="pressure")
+        pressure_node = qtypes.Null(label="Pressure")
         for i in range(12):
-            self.pressure_table.append(qtypes.Number(disabled=True, name=f"sensor_{i}"))
-        self.status_scroll_area.add_widget(self.pressure_table)
-        #
-        layout.addWidget(self.status_widget, 0)
-        # main widget -----------------------------------------------------------------------------
-        tab_widget = QtWidgets.QTabWidget()
-        layout.addWidget(tab_widget, 1)
-        # advanced
-        advanced = self._create_advanced()
-        tab_widget.addTab(advanced, "advanced")
+            node = qtypes.Float(label=f"Transducer {i}", units="PSI")
+            node.append(qtypes.Float("Tare Value", units="PSI"))
+            node.append(qtypes.Button("Tare Now"))
+            pressure_node.append(node)
+        self.root_item.append(pressure_node)
         # graph
         self.graph = self._create_graph()
-        tab_widget.addTab(self.graph, "graph")
-        tab_widget.setCurrentIndex(1)
+        splitter.addWidget(self.graph)
         # finish
-        self.central_widget.setLayout(layout)
-        self.setCentralWidget(self.central_widget)
+        self.tree_widget[0].expand(depth=0)
+        self.tree_widget[1].expand(depth=0)
+        self.tree_widget[2].expand(depth=0)
+        self.tree_widget.resizeColumnToContents(0)
+        self.tree_widget.resizeColumnToContents(1)
+        splitter.setStretchFactor(0, 75)
+        splitter.setStretchFactor(1, 50)
+        self.setCentralWidget(splitter)
 
-    def _create_advanced(self):
-        widget = QtWidgets.QWidget()
-        widget.setLayout(QtWidgets.QHBoxLayout())
-        widget.layout().setContentsMargins(0, 0, 0, 0)
-        scroll_area = qtypes.widgets.ScrollArea()
-        widget.layout().addWidget(scroll_area, 0)
-        # known pressure
-        input_table = qtypes.widgets.InputTable()
-        input_table.append(None, "tare pressure")
-        self.known_tare_pressure = qtypes.Number(name="known pressure", value=14.696)
-        input_table.append(self.known_tare_pressure)
-        self.temp_table["poll period (s)"].set(1)
-        scroll_area.add_widget(input_table)
-        # tare buttons
-        for i in range(12):
-            button = qtypes.widgets.PushButton(f"TARE TRANSDUCER {i}")
-            button.clicked.connect(partial(self._on_tare, i))
-            scroll_area.add_widget(button)
-        # finish
-        widget.layout().addStretch(1)
-        return widget
+    def _create_data_file(self):
+        now = datetime.datetime.now()
+        fname = "gas-uptake_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+        data_directory = platformdirs.user_desktop_path() / "gas-uptake-data"
+        fp = data_directory / fname
+        tab = "\t"
+        newline = "\n"
+        with open(fp, "a") as f:
+            f.write("timestamp:" + tab + "'" + now.isoformat() + "'" + newline)
+            f.write("gas-uptake version:" + tab + "'" +  __version__ + "'" + newline)
+            f.write("please cite yaq:" + tab + "https://doi.org/10.1063/5.0135255" + newline)
+            f.write("please cite bluesky:" + tab + "https://doi.org/10.1080/08940886.2019.1608121" + newline)
+            f.write("temperature units:" + tab + "'C'" + newline)
+            f.write("pressure units:" + tab + "'PSI'" + newline)
+            f.write("column:" + tab + "[")
+            f.write("'labtime'")
+            f.write(tab + "'temperature'")
+            for i in range(12):
+                f.write(tab + f"'pressure_{i}'")
+            f.write("]" + newline)
+        return fp
 
     def _create_graph(self):
         pw = pg.PlotWidget()
@@ -160,45 +149,82 @@ class MainWindow(QtWidgets.QMainWindow):
         #
         return pw
 
-    def _on_record(self):
+    def _on_record(self, value):
         self.recording = not self.recording
         if self.recording:
-            self.client.begin_recording()
-            # button color
-            self.record_button.set_background("#c82829")
-            self.record_button.setText("STOP RECORDING")
             # array
             self.data = np.full((14, 10000), np.nan)
             self.record_started = time.time()
+            # init data file
+            self.data_file_path = self._create_data_file()
+            self.file_path_node.set_value(str(self.data_file_path))
+            self.recording = True
+            # button color
+            #self.record_button.set_background("#c82829")
+            #self.record_button.setText("STOP RECORDING")
         else:
-            self.client.stop_recording()
+            self.recording = False
             # button color
             self.record_button.set_background("#718c00")
             self.record_button.setText("BEGIN RECORDING")
         self.poll_timer.start(1000)
+
+    def _on_temp_setpoint_updated(self, value):
+        self.temp_client.set_position(value["value"])
 
     def _on_tare(self, channel_index):
         known_value = self.known_tare_pressure.get()
         self.client.tare_pressure(known_value, channel_index)
 
     def poll(self):
-        row = self.client.get_last_reading()
+        t = time.time()
+        row = np.full(14, np.nan)
+        # time
+        row[0] = time.time()
+        # temperature
+        row[1] = self.temp_client.get_position()
+        QtWidgets.QApplication.exec()
+        # pressure
+        raw = dict()
+        for k, v in self.pressure_clients.items():
+            raw[k] = v.get_measured()
+            QtWidgets.QApplication.exec()
+        measured_pressures = dict()
+        # this mapping makes little sense, but it's how it's wired
+        # deal with it
+        # ---Blaise 2024-02-13
+        measured_pressures[0] = raw["current_sense_upper"]["channel6"]
+        measured_pressures[1] = raw["current_sense_upper"]["channel5"]
+        measured_pressures[2] = raw["current_sense_upper"]["channel4"]
+        measured_pressures[3] = raw["current_sense_upper"]["channel3"]
+        measured_pressures[4] = raw["current_sense_lower"]["channel1"]
+        measured_pressures[5] = raw["current_sense_lower"]["channel0"]
+        measured_pressures[6] = raw["current_sense_upper"]["channel0"]
+        measured_pressures[7] = raw["current_sense_upper"]["channel1"]
+        measured_pressures[8] = raw["current_sense_lower"]["channel5"]
+        measured_pressures[9] = raw["current_sense_lower"]["channel4"]
+        measured_pressures[10] = raw["current_sense_lower"]["channel3"]
+        measured_pressures[11] = raw["current_sense_lower"]["channel2"]
+        for k, v in measured_pressures.items():
+            v *= 1000  # A to mA
+            v -= 4
+            v *= 150/20  # mA to PSI
+            if v < 0:
+                v = float("nan")
+            row[k+2] = v
+        # record
+        if self.recording:
+            with open(self.data_file_path, "a") as f:
+                for n in row:
+                    f.write("%8.6f" % n)
+                    f.write("\t")
+                f.write("\n")
+                QtWidgets.QApplication.exec()
+        # finish
         self.data = np.roll(self.data, shift=-1, axis=1)
         self.data[:, -1] = row
-        self.temp_table["current"].set(row[1])
-        for i in range(12):
-            self.pressure_table[f"sensor_{i}"].set(row[i+2])
         self.update_plot()
-
-    def set_temperature(self):
-        val = self.temp_table["set"].get()
-        print("set temperature",val)
-        self.client.set_temperature(val)
-
-    def set_poll_period(self):
-        val = self.temp_table["poll period (s)"].get()
-        print("poll period (s)",val)
-        self.client.set_poll_period(val)
+        self.update_widgets(row)
 
     def update_plot(self):
         xi = self.data[0] - self.record_started
@@ -211,11 +237,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.p2.linkedViewChanged(self.p1.vb, self.p2.XAxis)
         self.p2.setYRange(0, np.nanmax(self.data[2:]))
 
+    def update_widgets(self, row):
+        self.root_item[1][0].set_value(row[1])
+        if self.recording:
+            self.time_recorded_node.set_value(str(time.time() - self.record_started))
+        for i in range(12):
+            self.root_item[2][i].set_value(row[i+2])
 
 def main():
     """Initialize application and main window."""
     app = QtWidgets.QApplication(sys.argv)
-    main_window = MainWindow(app)
+    with open(platformdirs.user_config_path("gas-uptake") / "config.toml", "rb") as f:
+        config = tomli.load(f)
+    main_window = MainWindow(app, config=config)
     main_window.create_central_widget()
     main_window.showMaximized()
     sys.exit(app.exec_())
