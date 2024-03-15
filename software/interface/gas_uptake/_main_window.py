@@ -130,6 +130,8 @@ class MainWindow(QtWidgets.QMainWindow):
             f.write("please cite bluesky:" + tab + "https://doi.org/10.1080/08940886.2019.1608121" + newline)
             f.write("temperature units:" + tab + "'C'" + newline)
             f.write("pressure units:" + tab + "'PSI'" + newline)
+            for k, v in self._state.items():
+                f.write(k + tab + str(v) + newline)
             f.write("column:" + tab + "[")
             f.write("'labtime'")
             f.write(tab + "'temperature'")
