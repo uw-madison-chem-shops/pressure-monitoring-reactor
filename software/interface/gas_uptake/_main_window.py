@@ -1,4 +1,5 @@
 import os
+import re
 import platformdirs
 import tomli
 import time
@@ -13,6 +14,7 @@ from functools import partial
 from qtpy import QtCore, QtGui, QtWidgets
 import yaqc_bluesky
 from .__version__ import *
+from ._persistant_state import PersistantState
 
 
 __here__ = pathlib.Path(__file__).absolute().parent
@@ -20,6 +22,12 @@ __here__ = pathlib.Path(__file__).absolute().parent
 
 with open(__here__ / "colors.txt", "r") as f:
     colors = [line.strip() for line in f]
+
+
+# make persistant state if it doesn't exist
+persistant_state_path = platformdirs.user_data_path("gas_uptake") / "state.toml"
+persistant_state_path.parent.mkdir(parents=True, exist_ok=True)
+persistant_state_path.touch(exist_ok=True)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -32,7 +40,13 @@ class MainWindow(QtWidgets.QMainWindow):
         title += " | version %s" % self.__version__
         title += " | Python %i.%i" % (sys.version_info[0], sys.version_info[1])
         self.setWindowTitle(title)
-        #
+        # state
+        self._state = PersistantState(persistant_state_path)
+        for i in range(12):
+            k = f"tare_pressure_{i}"
+            if k not in self._state:
+                self._state[k] = 0.0
+        # yaq
         self.data = np.full((14, 10000), np.nan)
         self.recording = False
         self.temp_client = yaqc.Client(host=config["temp_client"]["host"], port=config["temp_client"]["port"])
@@ -79,13 +93,16 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_node.append(temp_advanced_node)
         self.root_item.append(temp_node)
         # pressure
-        pressure_node = qtypes.Null(label="Pressure")
+        self.pressure_node = qtypes.Null(label="Pressure")
         for i in range(12):
             node = qtypes.Float(label=f"Transducer {i}", units="PSI")
-            node.append(qtypes.Float("Tare Value", units="PSI"))
-            node.append(qtypes.Button("Tare Now"))
-            pressure_node.append(node)
-        self.root_item.append(pressure_node)
+            node.append(qtypes.Float("Offset", units="PSI", value=self._state[f"tare_pressure_{i}"], disabled=True))
+            node.append(qtypes.Float("Tare Value", units="PSI", value=0.0))
+            button = qtypes.Button(f"Tare Transducer {i} Now")
+            button.updated_connect(self._on_tare)
+            node.append(button)
+            self.pressure_node.append(node)
+        self.root_item.append(self.pressure_node)
         # graph
         self.graph = self._create_graph()
         splitter.addWidget(self.graph)
@@ -172,9 +189,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _on_temp_setpoint_updated(self, value):
         self.temp_client.set_position(value["value"])
 
-    def _on_tare(self, channel_index):
-        known_value = self.known_tare_pressure.get()
-        self.client.tare_pressure(known_value, channel_index)
+    def _on_tare(self, value):
+        print("on tare", value)
+        transducer_index = int(re.findall(r'\d+(?:[.,]\d+)?', value["label"])[0])
+        print("on tare", transducer_index)
+        node = self.pressure_node[transducer_index]
+        measured = node.get()["value"]
+        measured -= self._state[f"tare_pressure_{transducer_index}"]
+        actual = node[1].get()["value"]
+        correction = actual - measured
+        self._state[f"tare_pressure_{transducer_index}"] = correction
 
     def poll(self):
         t = time.time()
@@ -211,6 +235,8 @@ class MainWindow(QtWidgets.QMainWindow):
             v *= 150/20  # mA to PSI
             if v < 0:
                 v = float("nan")
+            else:
+                v += self._state[f"tare_pressure_{k}"]
             row[k+2] = v
         # record
         if self.recording:
@@ -243,6 +269,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.time_recorded_node.set_value(str(time.time() - self.record_started))
         for i in range(12):
             self.root_item[2][i].set_value(row[i+2])
+            self.root_item[2][i][0].set_value(self._state[f"tare_pressure_{i}"])
 
 def main():
     """Initialize application and main window."""
